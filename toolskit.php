@@ -101,6 +101,8 @@ function conecta($tipoBanco)
   if (!$nuconexao) {
     die("Erro ao conectar ao PostgreSQL.");
   }
+
+  return $nuconexao;
 }
 ################################ Fim da Função terminapagina
 
