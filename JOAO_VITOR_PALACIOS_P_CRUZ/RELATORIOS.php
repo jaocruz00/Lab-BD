@@ -1,6 +1,6 @@
 <?php
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Nome do Programa : exgatilhos[20261].php
+# Nome do Programa : RELATORIOS.php
 # Objetivo         : Demonstração dos Gatilhos da Fase 4: (1) BIprofessores - CP automática
 #                    no INSERT (MAX+5); (2) BDprofessores - bloqueio do DELETE quando há
 #                    turmas vinculadas ao professor.
@@ -39,7 +39,8 @@
 # FIM
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 include("../toolskit.php");
-conecta("PostgreSQL"); # Conectando com o Servidor PostgreSQL.
+/** @var resource $nuconexao */
+$nuconexao = conecta("PostgreSQL"); # Conectando com o Servidor PostgreSQL.
 # Determinando valores para as variáveis de controle de execução do PA
 $acao = ( ISSET($_REQUEST['acao'])  ) ? $_REQUEST['acao'] : "Navegar";
 $bloco= ( ISSET($_REQUEST['bloco']) ) ? $_REQUEST['bloco'] : '1';
@@ -61,7 +62,7 @@ switch (TRUE)
 {
   case ( $acao=="Navegar" ):
   { # 1-Sessão que controla a NAVEGAÇÃO sobre os dados para manutenção
-    printf(" <form action='./exgatilhos[20261].php' method='POST'>\n");
+    printf(" <form action='./RELATORIOS.php' method='POST'>\n");
     printf("  <input type='hidden' name='acao'  value='$acao'>\n");
     printf("  <input type='hidden' name='bloco' value='$bloco'>\n");
     printf("  <input type='hidden' name='salto' value='$salto'>\n");
@@ -76,7 +77,7 @@ switch (TRUE)
     { # 2.1 - Este é o seletor de controle da emissão do Relat01
       case ( $bloco==1 ):
       { # 2.1.1-Form para digitação dos dados do novo professor
-        printf("<form action='./exgatilhos[20261].php' method='post'>\n");
+        printf("<form action='./RELATORIOS.php' method='post'>\n");
         printf("<input type='hidden' name='acao'  value='$acao'>\n");
         printf("<input type='hidden' name='bloco' value='2'>\n");
         printf("<input type='hidden' name='salto' value='$salto'>\n");
@@ -110,21 +111,24 @@ switch (TRUE)
       } # 2.1.1-Fim da Execução form (digitação dos dados)
       case ( $bloco==2 || $bloco==3 ):
       { # 2.1.2-Executa o INSERT (gatilho calcula a CP) e monta a listagem para tela (2) ou impressão (3)
-        $txnomeprofessor = $_REQUEST['txnomeprofessor'];
-        $dtnascimento    = $_REQUEST['dtnascimento'];
-        $celogradouro    = $_REQUEST['celogradouro'];
-        # O cpprofessor NÃO é informado: o gatilho BIprofessores() atribui MAX(cpprofessor)+5 automaticamente.
-        $query="INSERT INTO professores (txnomeprofessor, dtnascimento, dtcadprofessor, celogradouro)
-                VALUES ('$txnomeprofessor', '$dtnascimento', CURRENT_DATE, '$celogradouro')";
-        $sql = pg_query($nuconexao,$query);
-        if ($sql)
+        if ( $bloco==2 )
         {
-          printf("<br><font color='green'><b>Professor inclu&iacute;do com sucesso!</b></font><br>\n");
-          printf("O Gatilho BIprofessores atribuiu o c&oacute;digo (CP) automaticamente.<br><br>\n");
-        }
-        else
-        {
-          printf("<br><font color='red'><b>Erro na inclus&atilde;o:</b> %s</font><br><br>\n", pg_last_error($nuconexao));
+          $txnomeprofessor = $_REQUEST['txnomeprofessor'];
+          $dtnascimento    = $_REQUEST['dtnascimento'];
+          $celogradouro    = $_REQUEST['celogradouro'];
+          # O cpprofessor NÃO é informado: o gatilho BIprofessores() atribui MAX(cpprofessor)+5 automaticamente.
+          $query="INSERT INTO professores (txnomeprofessor, dtnascimento, dtcadprofessor, celogradouro)
+                  VALUES ('$txnomeprofessor', '$dtnascimento', CURRENT_DATE, '$celogradouro')";
+          $sql = pg_query($nuconexao,$query);
+          if ($sql)
+          {
+            printf("<br><font color='green'><b>Professor inclu&iacute;do com sucesso!</b></font><br>\n");
+            printf("O Gatilho BIprofessores atribuiu o c&oacute;digo (CP) automaticamente.<br><br>\n");
+          }
+          else
+          {
+            printf("<br><font color='red'><b>Erro na inclus&atilde;o:</b> %s</font><br><br>\n", pg_last_error($nuconexao));
+          }
         }
         $qlist="select cpprofessor, txnomeprofessor, dtnascimento, dtcadprofessor from professores order by cpprofessor";
         $sql = pg_query($nuconexao,$qlist);
@@ -145,7 +149,7 @@ switch (TRUE)
         printf("</table>\n");
         if ( $bloco==2 )
         { # 2.1.2.2 vamos montar o botão para impressão ----------------------------------------------------------
-          printf("<form action='./exgatilhos[20261].php' method='POST' target='_NEW'>\n");
+          printf("<form action='./RELATORIOS.php' method='POST' target='_NEW'>\n");
           printf("<input type='hidden' name='acao'  value='$acao'>\n");
           printf("<input type='hidden' name='bloco' value='3'>\n");
           printf("<input type='hidden' name='salto' value='$salto'>\n");
@@ -172,7 +176,7 @@ switch (TRUE)
     { # 3.1 - Este é o seletor de controle da emissão do Relat02
       case ( $bloco==1 ):
       { # 3.1.1-Form para escolha do professor a ser excluído
-        printf("<form action='./exgatilhos[20261].php' method='post'>\n");
+        printf("<form action='./RELATORIOS.php' method='post'>\n");
         printf("<input type='hidden' name='acao'  value='$acao'>\n");
         printf("<input type='hidden' name='bloco' value='2'>\n");
         printf("<input type='hidden' name='salto' value='$salto'>\n");
@@ -205,21 +209,24 @@ switch (TRUE)
       case ( $bloco==2 || $bloco==3 ):
       { # 3.1.2-Executa o DELETE (gatilho pode bloquear) e monta a listagem para tela (2) ou impressão (3)
         $cpprofessor = $_REQUEST['cpprofessor'];
-        $qnome = pg_query($nuconexao,"select txnomeprofessor from professores where cpprofessor='$cpprofessor'");
-        $lenome = pg_fetch_array($qnome);
-        $txnome = $lenome['txnomeprofessor'];
-        printf("Tentando excluir: <b>$txnome (CP=$cpprofessor)</b><br><br>\n");
-        # O gatilho BDprofessores() dispara ANTES do DELETE e cancela a operação (RAISE EXCEPTION) se houver turmas vinculadas.
-        $query="DELETE FROM professores WHERE cpprofessor='$cpprofessor'";
-        $sql = @pg_query($nuconexao,$query); # @ suprime warning do PHP para capturar o erro via pg_last_error
-        if ($sql)
+        if ( $bloco==2 )
         {
-          printf("<font color='green'><b>Professor exclu&iacute;do com sucesso!</b></font><br><br>\n");
-        }
-        else
-        {
-          printf("<font color='red'><b>Exclus&atilde;o bloqueada pelo Gatilho BDprofessores!</b></font><br>\n");
-          printf("Mensagem do banco: <i>%s</i><br><br>\n", pg_last_error($nuconexao));
+          $qnome = pg_query($nuconexao,"select txnomeprofessor from professores where cpprofessor='$cpprofessor'");
+          $lenome = pg_fetch_array($qnome);
+          $txnome = $lenome['txnomeprofessor'];
+          printf("Tentando excluir: <b>$txnome (CP=$cpprofessor)</b><br><br>\n");
+          # O gatilho BDprofessores() dispara ANTES do DELETE e cancela a operação (RAISE EXCEPTION) se houver turmas vinculadas.
+          $query="DELETE FROM professores WHERE cpprofessor='$cpprofessor'";
+          $sql = @pg_query($nuconexao,$query); # @ suprime warning do PHP para capturar o erro via pg_last_error
+          if ($sql)
+          {
+            printf("<font color='green'><b>Professor exclu&iacute;do com sucesso!</b></font><br><br>\n");
+          }
+          else
+          {
+            printf("<font color='red'><b>Exclus&atilde;o bloqueada pelo Gatilho BDprofessores!</b></font><br>\n");
+            printf("Mensagem do banco: <i>%s</i><br><br>\n", pg_last_error($nuconexao));
+          }
         }
         $qlist="select cpprofessor, txnomeprofessor, dtnascimento, dtcadprofessor from professores order by cpprofessor";
         $sql = pg_query($nuconexao,$qlist);
@@ -240,7 +247,7 @@ switch (TRUE)
         printf("</table>\n");
         if ( $bloco==2 )
         { # 3.1.2.2 vamos montar o botão para impressão ----------------------------------------------------------
-          printf("<form action='./exgatilhos[20261].php' method='POST' target='_NEW'>\n");
+          printf("<form action='./RELATORIOS.php' method='POST' target='_NEW'>\n");
           printf("<input type='hidden' name='acao'        value='$acao'>\n");
           printf("<input type='hidden' name='bloco'       value='3'>\n");
           printf("<input type='hidden' name='salto'       value='$salto'>\n");
@@ -263,5 +270,5 @@ switch (TRUE)
     break;
   } # 3-Fim da Sessão que controla a ação: Relat02 ###############################################################
 }
-terminapagina("Gatilhos da Fase 4","exgatilhos[20261].php",TRUE);
+terminapagina("Gatilhos da Fase 4","RELATORIOS.php",TRUE);
 ?>

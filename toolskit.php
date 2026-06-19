@@ -95,12 +95,18 @@ function conecta($tipoBanco)
 
   $string_conexao = "host=$host port=$port dbname=$dbname user=$user password=$password";
     
+  if (!function_exists("pg_connect")) {
+    die("Extens&atilde;o pgsql do PHP n&atilde;o est&aacute; habilitada. Habilite php-pgsql/extension=pgsql para usar o PostgreSQL.");
+  }
+
   # Conecta nativamente no PostgreSQL
   $nuconexao = pg_connect($string_conexao);
 
   if (!$nuconexao) {
     die("Erro ao conectar ao PostgreSQL.");
   }
+
+  return $nuconexao;
 }
 ################################ Fim da Função terminapagina
 
