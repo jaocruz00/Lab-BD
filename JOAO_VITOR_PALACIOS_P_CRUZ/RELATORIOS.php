@@ -39,7 +39,8 @@
 # FIM
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 include("../toolskit.php");
-conecta("PostgreSQL"); # Conectando com o Servidor PostgreSQL.
+/** @var PgSql\Connection|resource $nuconexao */
+$nuconexao = conecta("PostgreSQL"); # Conectando com o Servidor PostgreSQL.
 # Determinando valores para as variáveis de controle de execução do PA
 $acao = ( ISSET($_REQUEST['acao'])  ) ? $_REQUEST['acao'] : "Navegar";
 $bloco= ( ISSET($_REQUEST['bloco']) ) ? $_REQUEST['bloco'] : '1';
